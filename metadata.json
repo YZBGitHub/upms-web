@@ -1,0 +1,6 @@
+{
+  "name": "新大陆教育云平台",
+  "description": "Dashboard for school management and administration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
