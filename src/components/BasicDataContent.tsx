@@ -6,19 +6,19 @@ const initialDicts = [
     id: '1', 
     code: 'job_title', 
     name: '职务/职称', 
-    items: ['教务处长', '管理员', '教授', '副教授', '讲师', '助教', '其他'] 
+    items: ['教务处长', '管理员', '教授', '副教授', '讲师', '助教', '其他'].map(name => ({ name, remark: '' })) 
   },
   { 
     id: '2', 
     code: 'research_field', 
     name: '研究领域', 
-    items: ['集成电路', '数据要素', '5G', '人工智能', '云计算', '大数据', '物联网', 'IDC', '消费电子', '智能手机', '数字经济', '国产软件', '网络安全', '新能源汽车', '低空经济', '自动驾驶', '锂离子电池', '机器人', '汽车', '汽车零部件', '汽车电子', '汽车轻量化', '机械设备', '特高压', '光伏', '风电', '碳中和', '公共事业', '金属新材料', '石油化工', '医药生物', '生物药品', '医疗器械', '半导体设备', '半导体材料', '化学药品', '体外诊断', '食品饮料', '显示屏', '中药', '大气治理', '房地产', '纺织', '航空航天装备', '基础设施', '家用电器', '环保', '污水处理', '资源循环利用', '其他'] 
+    items: ['集成电路', '数据要素', '5G', '人工智能', '云计算', '大数据', '物联网', 'IDC', '消费电子', '智能手机', '数字经济', '国产软件', '网络安全', '新能源汽车', '低空经济', '自动驾驶', '锂离子电池', '机器人', '汽车', '汽车零部件', '汽车电子', '汽车轻量化', '机械设备', '特高压', '光伏', '风电', '碳中和', '公共事业', '金属新材料', '石油化工', '医药生物', '生物药品', '医疗器械', '半导体设备', '半导体材料', '化学药品', '体外诊断', '食品饮料', '显示屏', '中药', '大气治理', '房地产', '纺织', '航空航天装备', '基础设施', '家用电器', '环保', '污水处理', '资源循环利用', '其他'].map(name => ({ name, remark: '' })) 
   },
   { 
     id: '3', 
     code: 'education', 
     name: '学历', 
-    items: ['中专/中技', '高中', '大专', '本科', '硕士', '博士'] 
+    items: ['中专/中技', '高中', '大专', '本科', '硕士', '博士'].map(name => ({ name, remark: '' })) 
   }
 ];
 
@@ -61,6 +61,11 @@ export default function BasicDataContent({ className }: { className?: string }) 
   const [isItemsModalOpen, setIsItemsModalOpen] = useState(false);
   const [currentDict, setCurrentDict] = useState<any>(null);
   const [newItemName, setNewItemName] = useState('');
+  const [newItemRemark, setNewItemRemark] = useState('');
+
+  const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+  const [editingItemName, setEditingItemName] = useState('');
+  const [editingItemRemark, setEditingItemRemark] = useState('');
 
   const displayedDictData = dicts.filter(item => item.name.includes(searchName));
 
@@ -154,19 +159,50 @@ export default function BasicDataContent({ className }: { className?: string }) 
   const openItemsModal = (dict: any) => {
     setCurrentDict(dict);
     setIsItemsModalOpen(true);
+    setNewItemName('');
+    setNewItemRemark('');
+    setEditingItemIndex(null);
+  };
+
+  const startEditItem = (index: number, item: any) => {
+    setEditingItemIndex(index);
+    setEditingItemName(item.name);
+    setEditingItemRemark(item.remark || '');
+  };
+
+  const cancelEditItem = () => {
+    setEditingItemIndex(null);
+    setEditingItemName('');
+    setEditingItemRemark('');
+  };
+
+  const saveEditItem = () => {
+    if (editingItemIndex === null || !editingItemName) return;
+    setDicts(dicts.map(d => {
+      if (d.id === currentDict.id) {
+        const newItems = [...d.items];
+        newItems[editingItemIndex] = { name: editingItemName, remark: editingItemRemark };
+        const updated = { ...d, items: newItems };
+        setCurrentDict(updated);
+        return updated;
+      }
+      return d;
+    }));
+    setEditingItemIndex(null);
   };
 
   const handleAddItem = () => {
     if (!newItemName) return;
     setDicts(dicts.map(d => {
       if (d.id === currentDict.id) {
-        const updated = { ...d, items: [...d.items, newItemName] };
+        const updated = { ...d, items: [...d.items, { name: newItemName, remark: newItemRemark }] };
         setCurrentDict(updated);
         return updated;
       }
       return d;
     }));
     setNewItemName('');
+    setNewItemRemark('');
   };
 
   const handleDeleteItem = (itemIndex: number) => {
@@ -607,6 +643,14 @@ export default function BasicDataContent({ className }: { className?: string }) 
                   onChange={(e) => setNewItemName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
                 />
+                <input 
+                  type="text" 
+                  className="flex-1 border border-gray-300 rounded px-3 py-2 text-[13px] focus:outline-none focus:border-[#3498eb] focus:ring-1 focus:ring-[#3498eb]"
+                  placeholder="请输入备注"
+                  value={newItemRemark}
+                  onChange={(e) => setNewItemRemark(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
+                />
                 <button 
                   onClick={handleAddItem}
                   className="bg-[#3498eb] hover:bg-blue-600 text-white px-4 py-2 rounded text-[13px] transition-colors whitespace-nowrap"
@@ -619,29 +663,78 @@ export default function BasicDataContent({ className }: { className?: string }) 
                 <table className="w-full text-left border-collapse text-[13px]">
                   <thead>
                     <tr className="bg-gray-50 text-gray-500 border-b border-gray-200 sticky top-0 z-10">
-                      <th className="py-2.5 px-4 font-medium w-20">序号</th>
-                      <th className="py-2.5 px-4 font-medium">字典项名称</th>
-                      <th className="py-2.5 px-4 font-medium w-24 text-center">操作</th>
+                      <th className="py-2.5 px-4 font-medium w-16">序号</th>
+                      <th className="py-2.5 px-4 font-medium w-1/3">字典项名称</th>
+                      <th className="py-2.5 px-4 font-medium">备注</th>
+                      <th className="py-2.5 px-4 font-medium w-20 text-center">操作</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {currentDict.items.map((item: string, index: number) => (
+                    {currentDict.items.map((item: any, index: number) => (
                       <tr key={index} className="border-b border-gray-50 text-gray-700 hover:bg-gray-50/50">
                         <td className="py-2.5 px-4">{index + 1}</td>
-                        <td className="py-2.5 px-4">{item}</td>
-                        <td className="py-2.5 px-4 text-center">
-                          <button 
-                            onClick={() => handleDeleteItem(index)}
-                            className="text-red-500 hover:text-red-700 transition-colors"
-                          >
-                            删除
-                          </button>
-                        </td>
+                        {editingItemIndex === index ? (
+                          <>
+                            <td className="py-2.5 px-4">
+                              <input 
+                                type="text"
+                                value={editingItemName}
+                                onChange={(e) => setEditingItemName(e.target.value)}
+                                className="w-full border border-gray-300 rounded px-2 py-1 text-[13px] focus:outline-none focus:border-[#3498eb]"
+                              />
+                            </td>
+                            <td className="py-2.5 px-4">
+                              <input 
+                                type="text"
+                                value={editingItemRemark}
+                                onChange={(e) => setEditingItemRemark(e.target.value)}
+                                className="w-full border border-gray-300 rounded px-2 py-1 text-[13px] focus:outline-none focus:border-[#3498eb]"
+                              />
+                            </td>
+                            <td className="py-2.5 px-4 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <button 
+                                  onClick={saveEditItem}
+                                  className="text-[#3498eb] hover:text-blue-700 transition-colors"
+                                >
+                                  保存
+                                </button>
+                                <button 
+                                  onClick={cancelEditItem}
+                                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                                >
+                                  取消
+                                </button>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="py-2.5 px-4">{item.name}</td>
+                            <td className="py-2.5 px-4 text-gray-500">{item.remark || '-'}</td>
+                            <td className="py-2.5 px-4 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <button 
+                                  onClick={() => startEditItem(index, item)}
+                                  className="text-[#3498eb] hover:text-blue-700 transition-colors"
+                                >
+                                  编辑
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteItem(index)}
+                                  className="text-red-500 hover:text-red-700 transition-colors"
+                                >
+                                  删除
+                                </button>
+                              </div>
+                            </td>
+                          </>
+                        )}
                       </tr>
                     ))}
                     {currentDict.items.length === 0 && (
                       <tr>
-                        <td colSpan={3} className="py-6 text-center text-gray-400">暂无字典项</td>
+                        <td colSpan={4} className="py-6 text-center text-gray-400">暂无字典项</td>
                       </tr>
                     )}
                   </tbody>

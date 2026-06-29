@@ -69,6 +69,6 @@ export const platformData = [
   { id: '2', name: 'AI技能分析系统', rolesMap: { 'student': ['学生'], 'teacher': ['辅导员'], 'admin': ['学生处职员'] } },
   { id: '3', name: '陆产通平台', rolesMap: { 'teacher': ['实训管理员', '指导教师'] } },
   { id: '4', name: '硬件智能体系统', rolesMap: { 'admin': ['数据分析师', '校领导'] } },
-  { id: '5', name: '行业云', rolesMap: { 'guest': ['普通用户'] } },
+  { id: '5', name: '行业云', rolesMap: { 'registered': ['普通用户'] } },
   { id: '6', name: '考试系统', rolesMap: { 'teacher': ['教务管理员', '教师'] } },
 ];

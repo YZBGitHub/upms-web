@@ -3,7 +3,6 @@ import { platformData } from '../data';
 import { X, Settings, ChevronRight, Star, ChevronDown } from 'lucide-react';
 
 const userTypes = [
-  { id: 'guest', name: '游客', level: 0 },
   { id: 'registered', name: '注册用户', level: 0 },
   { id: 'auth', name: '认证用户', level: 0 },
   { id: 'enterprise', name: '企业用户', parent: 'auth', level: 1 },
@@ -30,28 +29,25 @@ const mockRoleGroups = [
 export default function DefaultSettingsContent({ className }: { className?: string }) {
   const [activeTab, setActiveTab] = useState<'roles' | 'packages' | 'data' | 'rewards' | 'tenant' | 'password'>('roles');
   
-  type PasswordLevel = 'weak' | 'medium' | 'strong';
-  
-  const [currentLevel, setCurrentLevel] = useState<PasswordLevel>('medium');
-  const [passwordConfigs, setPasswordConfigs] = useState<Record<PasswordLevel, {min: number, max: number, upper: boolean, lower: boolean, num: boolean, special: boolean, noSpace: boolean}>>({
-    weak: { min: 6, max: 16, upper: false, lower: false, num: true, special: false, noSpace: true },
-    medium: { min: 8, max: 16, upper: true, lower: true, num: true, special: false, noSpace: true },
-    strong: { min: 10, max: 20, upper: true, lower: true, num: true, special: true, noSpace: true }
-  });
+  const [passwordConfig, setPasswordConfig] = useState({ min: 8, max: 16, upper: true, lower: true, num: true, special: false, noSpace: true });
+
 
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<any>(null);
-  const [selectedUserType, setSelectedUserType] = useState('guest');
+  const [selectedUserType, setSelectedUserType] = useState('registered');
   const [rolesMap, setRolesMap] = useState<Record<string, string[]>>({});
   const [packageMap, setPackageMap] = useState<Record<string, string>>({});
   const [retentionMap, setRetentionMap] = useState<Record<string, string>>({
-    guest: '1',
     registered: '30',
     enterprise: '365',
     student: '180',
     teacher: '365',
     admin: '365'
   });
+
+  const [dailyPoints, setDailyPoints] = useState<number>(10);
+  const [weeklyPoints, setWeeklyPoints] = useState<number>(50);
+  const [monthlyPoints, setMonthlyPoints] = useState<number>(300);
   
   const detailedPackages = [
     { id: 'trial', name: '试用套餐', model: '', validity: '12月', price: '免费', accounts: '0', tokens: '5000000', aippt: '5', bgClass: 'from-[#e6f0ff] to-[#f5f9ff]', textClass: 'text-blue-500' },
@@ -84,7 +80,7 @@ export default function DefaultSettingsContent({ className }: { className?: stri
   const openRoleConfig = (platform: any) => {
     setSelectedPlatform(platform);
     setRolesMap(platform.rolesMap || {});
-    setSelectedUserType('guest');
+    setSelectedUserType('registered');
     setIsRoleModalOpen(true);
   };
 
@@ -211,30 +207,9 @@ export default function DefaultSettingsContent({ className }: { className?: stri
               <h3 className="font-medium text-gray-800 text-[14px] mb-6 border-b border-gray-100 pb-3">密码复杂度配置</h3>
               
               <div className="flex flex-col gap-6">
-                <div>
-                  <label className="text-gray-700 text-[13px] font-medium block mb-3">默认密码等级</label>
-                  <div className="flex items-center gap-6">
-                    {(['weak', 'medium', 'strong'] as PasswordLevel[]).map(level => {
-                      const labels = { weak: '弱', medium: '中等', strong: '强' };
-                      return (
-                        <label key={level} className="flex items-center gap-2 cursor-pointer">
-                          <input 
-                            type="radio" 
-                            name="passwordLevel"
-                            checked={currentLevel === level}
-                            onChange={() => setCurrentLevel(level)}
-                            className="w-4 h-4 text-[#3498eb] border-gray-300 focus:ring-[#3498eb]"
-                          />
-                          <span className="text-[14px] text-gray-700">{labels[level]}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 <div className="bg-gray-50/50 p-5 rounded border border-gray-100 space-y-5">
                   <h4 className="text-[13px] font-medium text-gray-700 mb-2">
-                    {currentLevel === 'weak' ? '弱' : currentLevel === 'medium' ? '中等' : '强'}等级规则配置
+                    密码规则配置
                   </h4>
                   
                   <div className="flex items-center gap-4">
@@ -242,15 +217,15 @@ export default function DefaultSettingsContent({ className }: { className?: stri
                     <div className="flex items-center gap-2">
                       <input 
                         type="number" 
-                        value={passwordConfigs[currentLevel].min} 
-                        onChange={(e) => setPasswordConfigs(prev => ({...prev, [currentLevel]: {...prev[currentLevel], min: parseInt(e.target.value) || 0}}))}
+                        value={passwordConfig.min} 
+                        onChange={(e) => setPasswordConfig(prev => ({...prev, min: parseInt(e.target.value) || 0}))}
                         className="border border-gray-300 rounded px-3 py-1.5 text-[13px] w-20 focus:border-[#3498eb] focus:outline-none"
                       />
                       <span className="text-gray-500 text-[13px]">-</span>
                       <input 
                         type="number" 
-                        value={passwordConfigs[currentLevel].max} 
-                        onChange={(e) => setPasswordConfigs(prev => ({...prev, [currentLevel]: {...prev[currentLevel], max: parseInt(e.target.value) || 0}}))}
+                        value={passwordConfig.max} 
+                        onChange={(e) => setPasswordConfig(prev => ({...prev, max: parseInt(e.target.value) || 0}))}
                         className="border border-gray-300 rounded px-3 py-1.5 text-[13px] w-20 focus:border-[#3498eb] focus:outline-none"
                       />
                       <span className="text-gray-500 text-[13px] ml-1">位</span>
@@ -263,8 +238,8 @@ export default function DefaultSettingsContent({ className }: { className?: stri
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input 
                           type="checkbox" 
-                          checked={passwordConfigs[currentLevel].upper}
-                          onChange={(e) => setPasswordConfigs(prev => ({...prev, [currentLevel]: {...prev[currentLevel], upper: e.target.checked}}))}
+                          checked={passwordConfig.upper}
+                          onChange={(e) => setPasswordConfig(prev => ({...prev, upper: e.target.checked}))}
                           className="rounded text-[#3498eb] focus:ring-[#3498eb] border-gray-300"
                         />
                         <span className="text-[13px] text-gray-700">大写字母 (A-Z)</span>
@@ -272,8 +247,8 @@ export default function DefaultSettingsContent({ className }: { className?: stri
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input 
                           type="checkbox" 
-                          checked={passwordConfigs[currentLevel].lower}
-                          onChange={(e) => setPasswordConfigs(prev => ({...prev, [currentLevel]: {...prev[currentLevel], lower: e.target.checked}}))}
+                          checked={passwordConfig.lower}
+                          onChange={(e) => setPasswordConfig(prev => ({...prev, lower: e.target.checked}))}
                           className="rounded text-[#3498eb] focus:ring-[#3498eb] border-gray-300"
                         />
                         <span className="text-[13px] text-gray-700">小写字母 (a-z)</span>
@@ -281,8 +256,8 @@ export default function DefaultSettingsContent({ className }: { className?: stri
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input 
                           type="checkbox" 
-                          checked={passwordConfigs[currentLevel].num}
-                          onChange={(e) => setPasswordConfigs(prev => ({...prev, [currentLevel]: {...prev[currentLevel], num: e.target.checked}}))}
+                          checked={passwordConfig.num}
+                          onChange={(e) => setPasswordConfig(prev => ({...prev, num: e.target.checked}))}
                           className="rounded text-[#3498eb] focus:ring-[#3498eb] border-gray-300"
                         />
                         <span className="text-[13px] text-gray-700">数字 (0-9)</span>
@@ -290,8 +265,8 @@ export default function DefaultSettingsContent({ className }: { className?: stri
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input 
                           type="checkbox" 
-                          checked={passwordConfigs[currentLevel].special}
-                          onChange={(e) => setPasswordConfigs(prev => ({...prev, [currentLevel]: {...prev[currentLevel], special: e.target.checked}}))}
+                          checked={passwordConfig.special}
+                          onChange={(e) => setPasswordConfig(prev => ({...prev, special: e.target.checked}))}
                           className="rounded text-[#3498eb] focus:ring-[#3498eb] border-gray-300"
                         />
                         <span className="text-[13px] text-gray-700">特殊字符 (!@#$%)</span>
@@ -305,8 +280,8 @@ export default function DefaultSettingsContent({ className }: { className?: stri
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input 
                           type="checkbox" 
-                          checked={passwordConfigs[currentLevel].noSpace}
-                          onChange={(e) => setPasswordConfigs(prev => ({...prev, [currentLevel]: {...prev[currentLevel], noSpace: e.target.checked}}))}
+                          checked={passwordConfig.noSpace}
+                          onChange={(e) => setPasswordConfig(prev => ({...prev, noSpace: e.target.checked}))}
                           className="rounded text-[#3498eb] focus:ring-[#3498eb] border-gray-300"
                         />
                         <span className="text-[13px] text-gray-700">不允许包含空格</span>
@@ -464,18 +439,20 @@ export default function DefaultSettingsContent({ className }: { className?: stri
                     <div className="w-1.5 h-1.5 rounded-full bg-[#3498eb]"></div>
                     <h4 className="font-medium text-gray-700 text-sm">日常签到赠送</h4>
                   </div>
-                  <div className="grid grid-cols-3 gap-6 pl-3">
+                  <div className="grid grid-cols-2 gap-6 pl-3">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs text-gray-500">赠送时长 (天)</label>
                       <input type="number" defaultValue="1" className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-gray-500">赠送 Token 数</label>
-                      <input type="number" defaultValue="1000" className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-gray-500">赠送 PPT 次数</label>
-                      <input type="number" defaultValue="1" className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" />
+                      <label className="text-xs text-gray-500">赠送积分</label>
+                      <input 
+                        type="number" 
+                        value={dailyPoints}
+                        onChange={(e) => setDailyPoints(Number(e.target.value) || 0)}
+                        className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" 
+                      />
+                      <span className="text-[11px] text-gray-400 mt-0.5">≈ {(dailyPoints * 100).toLocaleString()} Token</span>
                     </div>
                   </div>
                 </div>
@@ -488,18 +465,20 @@ export default function DefaultSettingsContent({ className }: { className?: stri
                     <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
                     <h4 className="font-medium text-gray-700 text-sm">连续签到 7 天额外赠送</h4>
                   </div>
-                  <div className="grid grid-cols-3 gap-6 pl-3">
+                  <div className="grid grid-cols-2 gap-6 pl-3">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs text-gray-500">额外时长 (天)</label>
                       <input type="number" defaultValue="3" className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-gray-500">额外 Token 数</label>
-                      <input type="number" defaultValue="5000" className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-gray-500">额外 PPT 次数</label>
-                      <input type="number" defaultValue="3" className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" />
+                      <label className="text-xs text-gray-500">额外积分</label>
+                      <input 
+                        type="number" 
+                        value={weeklyPoints}
+                        onChange={(e) => setWeeklyPoints(Number(e.target.value) || 0)}
+                        className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" 
+                      />
+                      <span className="text-[11px] text-gray-400 mt-0.5">≈ {(weeklyPoints * 100).toLocaleString()} Token</span>
                     </div>
                   </div>
                 </div>
@@ -512,18 +491,20 @@ export default function DefaultSettingsContent({ className }: { className?: stri
                     <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
                     <h4 className="font-medium text-gray-700 text-sm">连续签到 30 天额外赠送</h4>
                   </div>
-                  <div className="grid grid-cols-3 gap-6 pl-3">
+                  <div className="grid grid-cols-2 gap-6 pl-3">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs text-gray-500">额外时长 (天)</label>
                       <input type="number" defaultValue="15" className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-gray-500">额外 Token 数</label>
-                      <input type="number" defaultValue="30000" className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-gray-500">额外 PPT 次数</label>
-                      <input type="number" defaultValue="10" className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" />
+                      <label className="text-xs text-gray-500">额外积分</label>
+                      <input 
+                        type="number" 
+                        value={monthlyPoints}
+                        onChange={(e) => setMonthlyPoints(Number(e.target.value) || 0)}
+                        className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#3498eb]" 
+                      />
+                      <span className="text-[11px] text-gray-400 mt-0.5">≈ {(monthlyPoints * 100).toLocaleString()} Token</span>
                     </div>
                   </div>
                 </div>
@@ -593,7 +574,7 @@ export default function DefaultSettingsContent({ className }: { className?: stri
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {userTypes.filter(u => u.id !== 'guest').map((ut) => (
+                  {userTypes.map((ut) => (
                     <tr key={ut.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="py-3 px-6">
                         <div style={{ paddingLeft: `${ut.level * 20}px` }} className="flex items-center gap-2">

@@ -68,23 +68,44 @@ export default function SettingsContent({ className }: { className?: string }) {
 
               {smsEnabled && (
                 <div className="mt-8 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[13px] text-gray-600 font-medium">短信密钥设置 (API Key)</label>
-                    <input 
-                      type="password" 
-                      placeholder="请输入短信服务平台提供的密钥"
-                      className="border border-gray-200 rounded px-3 py-2 w-full max-w-md text-sm focus:outline-none focus:border-[#3498eb] focus:ring-1 focus:ring-[#3498eb]"
-                    />
+                  {/* 短信模板配置 */}
+                  <div className="pt-0">
+                    <h3 className="text-[14px] font-bold text-gray-800 mb-4 flex items-center">
+                      <div className="w-1 h-3 bg-gray-400 mr-2 rounded-sm"></div>
+                      短信模板配置
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {[
+                        { id: 'forgot', label: '忘记密码' },
+                        { id: 'login', label: '短信登录' },
+                        { id: 'register', label: '短信注册' },
+                        { id: 'invite_success', label: '邀请注册成功' },
+                        { id: 'invite_fail', label: '邀请注册失败' }
+                      ].map(template => (
+                        <div key={template.id} className="bg-gray-50 border border-gray-100 p-4 rounded-sm space-y-4">
+                          <h4 className="text-[13px] font-semibold text-gray-700">{template.label}模板</h4>
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[12px] text-gray-500">模板ID</label>
+                            <input 
+                              type="text" 
+                              placeholder="请输入模板ID"
+                              className="border border-gray-200 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:border-[#3498eb]"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[12px] text-gray-500">模板内容</label>
+                            <textarea 
+                              placeholder="请输入模板内容"
+                              rows={3}
+                              className="border border-gray-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#3498eb] resize-none"
+                            ></textarea>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[13px] text-gray-600 font-medium">接口设置 (API URL)</label>
-                    <input 
-                      type="text" 
-                      placeholder="请输入短信服务接口地址 (例: https://api.sms.com/send)"
-                      className="border border-gray-200 rounded px-3 py-2 w-full max-w-md text-sm focus:outline-none focus:border-[#3498eb] focus:ring-1 focus:ring-[#3498eb]"
-                    />
-                  </div>
-                  <div className="pt-4">
+
+                  <div className="pt-6">
                     <button className="bg-[#3498eb] hover:bg-blue-600 text-white px-8 py-2 rounded text-sm font-medium transition-colors">
                       保存配置
                     </button>
